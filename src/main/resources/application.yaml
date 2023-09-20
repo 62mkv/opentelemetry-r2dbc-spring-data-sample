@@ -1,5 +1,9 @@
 spring:
+  liquibase:
+    url: jdbc:postgresql://localhost:15432/sample
+    user: postgres
+    password: password
   r2dbc:
     url: r2dbc:postgresql://localhost:15432/sample
-    username: postgre
-    password: postgre
+    username: postgres
+    password: password

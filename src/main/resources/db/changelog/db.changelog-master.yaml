@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: 62mkv
+      changes:
+        createTable:
+          tableName: address
+          columns:
+            - column:
+                name: id
+                type: uuid
+                constraints:
+                  primaryKey: true
+                  nullable: false

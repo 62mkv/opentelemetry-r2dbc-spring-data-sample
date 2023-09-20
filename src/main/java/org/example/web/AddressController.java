@@ -3,15 +3,13 @@ package org.example.web;
 import lombok.RequiredArgsConstructor;
 import org.example.entity.Address;
 import org.example.repository.AddressRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-@RestController("/v1/addresses")
+@RestController
+@RequestMapping("/v1/addresses")
 @RequiredArgsConstructor
 public class AddressController {
 
