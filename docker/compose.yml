@@ -1,13 +1,29 @@
 services:
   postgresql:
     image: postgres:14.9
-    ports:
-      - "15432:5432"
     networks:
       - backend
     environment:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=sample
+
+  toxiproxy:
+    image: shopify/toxiproxy
+    networks:
+      - backend
+    ports:
+      - "15432:15432"
+
+  toxiproxy-config:
+    image: shopify/toxiproxy
+    depends_on:
+      - toxiproxy
+    entrypoint: >
+      sh -c "/go/bin/toxiproxy-cli -h toxiproxy:8474 delete pg-proxy;
+      /go/bin/toxiproxy-cli -h toxiproxy:8474 create pg-proxy --listen 0.0.0.0:15432 --upstream postgresql:5432;
+      /go/bin/toxiproxy-cli -h toxiproxy:8474 toxic add -t latency -a latency=100 pg-proxy"
+    networks:
+      - backend
 
 networks:
   backend:
