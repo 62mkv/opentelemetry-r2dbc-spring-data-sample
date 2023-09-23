@@ -9,6 +9,8 @@ services:
 
   toxiproxy:
     image: shopify/toxiproxy
+    depends_on:
+      - postgresql
     networks:
       - backend
     ports:
@@ -22,6 +24,31 @@ services:
       sh -c "/go/bin/toxiproxy-cli -h toxiproxy:8474 delete pg-proxy;
       /go/bin/toxiproxy-cli -h toxiproxy:8474 create pg-proxy --listen 0.0.0.0:15432 --upstream postgresql:5432;
       /go/bin/toxiproxy-cli -h toxiproxy:8474 toxic add -t latency -a latency=100 pg-proxy"
+    networks:
+      - backend
+
+  spring-boot-app:
+    image: docker.io/library/opentelemetry-r2dbc-spring-data-sample:1.0-SNAPSHOT
+    environment:
+      SPRING_LIQUIBASE_URL: jdbc:postgresql://toxiproxy:15432/sample
+      SPRING_R2DBC_URL: r2dbc:postgresql://toxiproxy:15432/sample
+      JAVA_OPTS: -javaagent:/opt/agent/opentelemetry-javaagent.jar
+      OTEL_TRACES_EXPORTER: zipkin
+      OTEL_EXPORTER_ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      OTEL_METRICS_EXPORTER: none
+    ports:
+      - 8080:8080
+    networks:
+      - backend
+    volumes:
+      - ../javaagent:/opt/agent
+    depends_on:
+      - toxiproxy
+
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411
     networks:
       - backend
 
