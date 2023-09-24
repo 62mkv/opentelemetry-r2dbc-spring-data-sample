@@ -27,8 +27,15 @@ services:
     networks:
       - backend
 
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411
+    networks:
+      - backend
+
   spring-boot-app:
-    image: docker.io/library/opentelemetry-r2dbc-spring-data-sample:1.0-SNAPSHOT
+    image: docker.io/library/opentelemetry-r2dbc-spring-data-sample:1.0-SNAPSHOT-HC
     environment:
       SPRING_LIQUIBASE_URL: jdbc:postgresql://toxiproxy:15432/sample
       SPRING_R2DBC_URL: r2dbc:postgresql://toxiproxy:15432/sample
@@ -36,6 +43,8 @@ services:
       OTEL_TRACES_EXPORTER: zipkin
       OTEL_EXPORTER_ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
       OTEL_METRICS_EXPORTER: none
+      THC_PATH: /actuator/health
+      THC_PORT: 8080
     ports:
       - 8080:8080
     networks:
@@ -44,13 +53,20 @@ services:
       - ../javaagent:/opt/agent
     depends_on:
       - toxiproxy
+    healthcheck:
+      test: ["CMD", "health-check"]
+      start_interval: 30s
+      interval: 5s
+      retries: 10
 
-  zipkin:
-    image: openzipkin/zipkin
-    ports:
-      - 9411:9411
+  traces-creator:
+    image: curlimages/curl
+    command: curl http://spring-boot-app:8080/v1/addresses 
     networks:
       - backend
+    depends_on:
+      spring-boot-app:
+        condition: service_healthy
 
 networks:
   backend:
